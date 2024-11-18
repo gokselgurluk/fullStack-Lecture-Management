@@ -69,7 +69,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<User> getPointialUsers(List<Integer> ids) {
+    public List<User> getPotentialUsers(List<Integer> ids) {
         if (ids.isEmpty()) {
             return  getUserByRole(Role.STUDENT);
         }

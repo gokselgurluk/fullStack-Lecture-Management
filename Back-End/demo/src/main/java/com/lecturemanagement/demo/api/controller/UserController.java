@@ -30,15 +30,21 @@ public class UserController {
     }
 
     @GetMapping("/by-role")
-    ResponseEntity<List<User>> getUsers(@RequestParam Role role){
+    ResponseEntity<List<User>> getUsersByrole(@RequestParam Role role){
         return ResponseEntity.ok(userService.getUserByRole(role));
     }
     @GetMapping("/{id}")
-    ResponseEntity<User> getUsers(@PathVariable Integer id){
+    ResponseEntity<User> getUser(@PathVariable Integer id){
         return ResponseEntity.ok(userService.getById(id));
     }
     @PostMapping
     ResponseEntity<User> createUser(@RequestParam User user){
         return  ResponseEntity.ok(userService.save(user));
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<Void> deleteUser(@PathVariable Integer id){
+        userService.delete(id);
+        return  ResponseEntity.ok().build();
     }
 }
