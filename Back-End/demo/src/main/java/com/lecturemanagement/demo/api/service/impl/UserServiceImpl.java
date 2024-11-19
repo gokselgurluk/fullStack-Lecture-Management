@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserService implements IUserService {
+public class UserServiceImpl implements IUserService {
 
     private  IUserRepository userRepository ;
 
-    public UserService(IUserRepository userRepository){
+    public UserServiceImpl(IUserRepository userRepository){
         this.userRepository = userRepository;
     }
 
