@@ -22,6 +22,7 @@ export default function User() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageItems, setPageItems] = useState([]);
+  const[errorMessage,setErrorMessage]=useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -74,6 +75,23 @@ export default function User() {
   function handleInputChange(e) {
     const { name, value } = e.target; // `naem` yazım hatası düzeltildi
     setSelectedUser({ ...selectedUser, [name]: value });
+  }
+  function saveUser(){
+    fetch('http://localhost:8080/api/users',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      mode:'cors',
+      body: JSON.stringify(selectedUser)
+
+    }).then((res)=>res.json())
+    .then((result)=>{
+      loadUsers();
+      clearForm();
+      setErrorMessage(result.errorMessage);
+      console.log(result);
+
+    });
+   
   }
 
   return (
@@ -169,7 +187,7 @@ export default function User() {
               <Button variant="primary" type="button" onClick={()=>{}}>
                 Update
               </Button>
-            ):<Button variant="primary" type="button" onClick={()=>{}}>
+            ):<Button variant="primary" type="button" onClick={saveUser}>
               Create
               </Button>}{' '}
             {isNotClear() ?(

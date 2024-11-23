@@ -14,8 +14,11 @@ public class CrossOriginConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedMethods("HEAD","GET","POST","PUT","DELETE","PATCH","OPTIONS");
-            }
-        };
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:5173") // İzin verilen domain
+                        .allowedMethods("HEAD","GET","POST","PUT","DELETE","PATCH","OPTIONS");// İzin verilen HTTP metodları
+                 }
+            };
+        }
     }
-}
+
