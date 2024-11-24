@@ -11,6 +11,7 @@ import java.util.List;
 public interface IUserRepository extends JpaRepository<User,Integer> {
     boolean existsByIdentityNo(String identityNo);
     List<User> findAllByRole(Role role);
-    List<User> findAllByRoleAndIdNotIn(Role role,List<Integer> idList);
+
+    List<User> findAllByRoleAndIdIsNotIn(Role role,List<Integer> idList);
 
 }

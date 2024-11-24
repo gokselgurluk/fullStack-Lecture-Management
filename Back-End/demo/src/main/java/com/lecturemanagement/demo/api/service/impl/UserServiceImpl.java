@@ -56,7 +56,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public void delete(Integer id) {
-        if (userRepository.existsById(id)) {
+        if (!userRepository.existsById(id)) {
             throw  new GeneralExeption("User Not Found");
         }
         userRepository.deleteById(id);
@@ -67,12 +67,11 @@ public class UserServiceImpl implements IUserService {
     public List<User> getUserByRole(Role role) {
         return userRepository.findAllByRole(role);
     }
-
     @Override
     public List<User> getPotentialUsers(List<Integer> ids) {
         if (ids.isEmpty()) {
-            return  getUserByRole(Role.STUDENT);
+            return getUserByRole(Role.STUDENT);
         }
-        return  userRepository.findAllByRoleAndIdNotIn(Role.STUDENT,ids);
+        return userRepository.findAllByRoleAndIdIsNotIn(Role.STUDENT,ids);
     }
 }

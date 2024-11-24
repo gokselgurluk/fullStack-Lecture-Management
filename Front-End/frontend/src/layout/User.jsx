@@ -9,20 +9,29 @@ import {
   FormGroup,
   FormSelect,
   Button,
+  Alert,
+  ModalHeader,
+  Modal,
 } from "react-bootstrap";
 
 export default function User() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState({
-    identityNo: "",
-    name: "",
-    surname: "",
-    gender: "",
-    role: "",
+    identityNo:'',
+    name: '',
+    surname: '',
+    gender: '',
+    role: ''
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageItems, setPageItems] = useState([]);
-  const[errorMessage,setErrorMessage]=useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [show, setShow] = useState(false);
+  const handleShow = () => setShow(true);
+  const handleClose = () => setShow(false);
+
+  
+
 
   useEffect(() => {
     loadUsers();
@@ -64,34 +73,45 @@ export default function User() {
   }
 
   function isNotClear() {
-    return(
-      selectedUser.identityNo!== ""||
-      selectedUser.name!==""||
-      selectedUser.surname!==""||
-      selectedUser.gender!==""||
-      selectedUser.role!==""
+    return (
+      selectedUser.identityNo !== "" ||
+      selectedUser.name !== "" ||
+      selectedUser.surname !== "" ||
+      selectedUser.gender !== "" ||
+      selectedUser.role !== ""
     );
   }
   function handleInputChange(e) {
     const { name, value } = e.target; // `naem` yazım hatası düzeltildi
     setSelectedUser({ ...selectedUser, [name]: value });
   }
-  function saveUser(){
-    fetch('http://localhost:8080/api/users',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      mode:'cors',
-      body: JSON.stringify(selectedUser)
-
-    }).then((res)=>res.json())
-    .then((result)=>{
+  function saveUser() {
+    fetch("http://localhost:8080/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      mode: "cors",
+      body: JSON.stringify(selectedUser),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.errorMessage) {
+          setErrorMessage(result.errorMessage);
+        } else {
+          loadUsers();
+          clearForm();
+          setErrorMessage(null);
+         
+        }
+      });
+  }
+  function deleteUser() {
+    fetch(`http://localhost:8080/api/users/${selectedUser.id}`, {
+      method: 'DELETE',
+    }).then(()=>{
       loadUsers();
       clearForm();
-      setErrorMessage(result.errorMessage);
-      console.log(result);
-
+      setShow(false)
     });
-   
   }
 
   return (
@@ -124,6 +144,13 @@ export default function User() {
         </Col>
         <Col sm={4}>
           <Form>
+            {errorMessage ? (
+              <Alert key="danger" variant="danger">
+                {errorMessage}
+              </Alert>
+            ) : (
+              ""
+            )}
             <FormGroup className="mb-3" controlId="identityNo">
               <Form.Label>Identity No</Form.Label>
               <Form.Control
@@ -182,28 +209,42 @@ export default function User() {
                 <option value="TEACHER">Teacher</option>
               </Form.Select>
             </FormGroup>
-
-            {selectedUser.id ?(
-              <Button variant="primary" type="button" onClick={()=>{}}>
-                Update
-              </Button>
-            ):<Button variant="primary" type="button" onClick={saveUser}>
-              Create
-              </Button>}{' '}
-            {isNotClear() ?(
-            <>
-            <Button variant="online-primary" type="button" onClick={clearForm}>
-              Clear
+            <Button variant="primary" disabled={!isNotClear()} type="button" onClick={saveUser}>
+              {selectedUser.id ? ('Update') : ('Create')}
             </Button>{' '}
-        
-            {selectedUser.id ?(<Button variant="danger" type="button">
-              Delete
-            </Button>):('')}
-            </>
-            ):('')}
+            {isNotClear() ? (
+              <>
+                <Button
+                  variant="online-primary"
+                  type="button"
+                  onClick={clearForm}
+                >
+                  Clear
+                </Button>{" "}
+                {selectedUser.id ? (
+                  <Button variant="danger" type="button" onClick={handleShow}>
+                    Delete
+                  </Button>
+                ) : (
+                  ""
+                )}
+              </>
+            ) : (
+              ""
+            )}
           </Form>
         </Col>
       </Row>
+      <Modal show={show} onHide={handleClose}>
+        <ModalHeader closeButton>
+          <Modal.Title>Delete</Modal.Title>
+        </ModalHeader>
+        <Modal.Body>Are you sure</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondray" onClick={handleClose}>Close</Button>
+        <Button variant='danger' onClick={deleteUser}>Delete</Button>
+        </Modal.Footer>
+         </Modal>
     </Container>
   );
 }
