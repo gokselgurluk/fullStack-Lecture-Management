@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col, Table, Pagination, Form, Button, Alert, Modal, ListGroup } from "react-bootstrap";
 
-
 export default function Lecture() {
     const [lectures, setLectures] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -20,12 +19,25 @@ export default function Lecture() {
         loadTeachers();
     }, [currentPage]);
 
+    function loadLectureStudents(lecture) {
+        fetch('http://localhost:8080/api/users/potential-students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(lecture.students.map((st) => st.id))
+        }).then((res) => res.json())
+            .then((result) => {
+                console.log(result);
+                setLectureStudents(result);
+            });
+    }
+
+
     function loadLectures() {
         fetch(`http://localhost:8080/api/lectures?page=${currentPage - 1}`)
             .then(res => res.json())
             .then((result) => {
                 setLectures(result.content);
-                console.log(result.content);
                 let items = [];
                 for (let index = 1; index <= result.totalPages; index++) {
                     items.push(
@@ -52,6 +64,7 @@ export default function Lecture() {
         setSelectedLecture({ ...selectedLecture, [name]: value });
         setLectureStudents([]);
     }
+
     function createLecture() {
         const lecture = {
             name: selectedLecture.name,
@@ -85,43 +98,95 @@ export default function Lecture() {
 
     }
 
-return <>  <Container>
-<Row>
-  <Col sm={8}>
-    <Table striped bordered hover>
-      <thead>
-        <tr>
-        <th>Id</th>
-          <th>Ders İsimi</th>
-          <th>Ogretmen</th>
-        </tr>
-      </thead>
-      <tbody>
-        {lectures.map((lec) => (
-            <>
-          <tr key={lec.id} onClick={() => {setSelectedLecture(lec)}}>
-            <td>{lec.id}</td>
-            <td>{lec.name}</td>
-            <td>{lec.teacher.name +' '+ lec.teacher.surname}</td>
-            </tr>
-          {selectedLecture.id && lec.id === selectedLecture.id ?selectedLecture.students.map((student)=>(
-            <tr key={student.identityNo}>
-                <td></td>
-                <td>{student.identityNo}</td>
-                <td>{student.name+' ' +student.surname}</td>
-                <td>
-                <Button size="sm" variant="danger" onClick={()=>{}}>Remove</Button>
-                </td>
-                  </tr>
-          )):''}
-           </>
-        ))}
-      </tbody>
-    </Table>
-    <Pagination>{pageItems}</Pagination>
-  </Col>
-  <Col sm={3}>
-  <Form>
+    function addStudent(student) {
+        selectedLecture.students.push(student);
+
+        fetch('http://localhost:8080/api/lectures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(selectedLecture)
+        }).then((res) => res.json())
+            .then((result) => {
+                loadLectures();
+                clearForm();
+            });
+    }
+
+    function setLecture(lecture) {
+        if (lecture.id === selectedLecture.id) {
+            clearForm();
+        } else {
+            lecture.teacherId = lecture.teacher.id;
+            setSelectedLecture(lecture);
+            loadLectureStudents(lecture);
+        }
+    }
+
+    function removeStudent(studentId) {
+        selectedLecture.students = selectedLecture.students.filter(
+            (student) => student.id !== studentId
+        );
+
+        fetch('http://localhost:8080/api/lectures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(selectedLecture)
+        }).then((res) => res.json())
+            .then((result) => {
+                loadLectures();
+                clearForm();
+            });
+
+    }
+
+    return <>
+        <Container>
+            <Row>
+                <Col sm={9}>
+                    <Table striped bordered hover>
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Name</th>
+                                <th>Teacher</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {lectures.map((lec) => (
+                                <>
+                                    <tr
+                                        key={lec.id}
+                                        onClick={() => {
+                                            setLecture(lec);
+                                        }}
+                                    >
+                                        <td>{lec.id}</td>
+                                        <td>{lec.name}</td>
+                                        <td>{lec.teacher.name + ' ' + lec.teacher.surname}</td>
+                                    </tr>
+                                    {selectedLecture.id && lec.id === selectedLecture.id
+                                        ? selectedLecture.students.map((student) => (
+                                            <tr key={student.identityNo}>
+                                                <td></td>
+                                                <td>{student.identityNo}</td>
+                                                <td>{student.name + ' ' + student.surname}</td>
+                                                <td>
+                                                    <Button size="sm" variant="danger" onClick={() => { removeStudent(student.id) }}>
+                                                        Remove
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        )) : ''}
+                                </>
+                            ))}
+                        </tbody>
+                    </Table>
+                    <Pagination>{pageItems}</Pagination>
+                </Col>
+                <Col sm={3}>
+                    <Form>
                         <Form.Group className="mb-3" controlId="name">
                             <Form.Label>Name</Form.Label>
                             <Form.Control
@@ -160,9 +225,21 @@ return <>  <Container>
                             </Button> : ''
 
                         }
-                        </Form>
-  </Col>
-</Row>
-
-</Container></>
+                    </Form><br />
+                    <ListGroup as='ol' numbered>
+                        {lectureStudents.map((student) => (
+                            <ListGroup.Item as='li' className="d-flex justify-content-between align-items-start" key={student.id}>
+                                <div className="ms-2 me-auto">
+                                    {student.name} {student.surname}
+                                </div>
+                                <Button variant="outline-primary" size='sm' onClick={() => addStudent(student)}>
+                                    Add
+                                </Button>
+                            </ListGroup.Item>
+                        ))}
+                    </ListGroup>
+                </Col>
+            </Row>
+        </Container>
+    </>;
 }
